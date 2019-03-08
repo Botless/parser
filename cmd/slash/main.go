@@ -41,7 +41,7 @@ func _main(args []string) int {
 		log.Fatalf("Failed to create client: %s", err.Error())
 	}
 
-	p := slash.New(c)
+	p := &slash.Slash{Ce: c}
 
 	ctx := context.Background()
 	if err := c.StartReceiver(ctx, p.Receive); err != nil {

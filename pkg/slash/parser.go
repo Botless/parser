@@ -12,11 +12,7 @@ import (
 )
 
 type Slash struct {
-	c client.Client
-}
-
-func New(c client.Client) *Slash {
-	return new(Slash)
+	Ce client.Client
 }
 
 func (p *Slash) Receive(event cloudevents.Event) {
@@ -50,7 +46,9 @@ func (p *Slash) parseSlackMessage(event cloudevents.Event) {
 
 		ec := event.Context.AsV02()
 
-		cmd.Author = msg.Msg.Username
+		log.Printf("got: %+v", msg)
+
+		cmd.Author = msg.Msg.Name
 		cmd.Channel = msg.Channel
 
 		cmdEvent := cloudevents.Event{
@@ -62,7 +60,7 @@ func (p *Slash) parseSlackMessage(event cloudevents.Event) {
 			}.AsV02(),
 			Data: cmd,
 		}
-		if _, err := p.c.Send(context.TODO(), cmdEvent); err != nil {
+		if _, err := p.Ce.Send(context.TODO(), cmdEvent); err != nil {
 			log.Printf("failed to send botless command %s", err.Error())
 		} else {
 			log.Printf("sent: %s command: %+v", cmdEvent.Type(), cmd)
