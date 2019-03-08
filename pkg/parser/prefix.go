@@ -1,27 +1,25 @@
-package slash
+package parser
 
 import (
 	"context"
-	"log"
-	"strings"
-
 	"github.com/botless/events/pkg/events"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	"github.com/nlopes/slack"
+	"log"
 )
 
-type Slash struct {
-	Ce client.Client
+type PrefixParser struct {
+	Ce     client.Client
+	Prefix string
 }
 
-func (p *Slash) Receive(event cloudevents.Event) {
+func (p *PrefixParser) Receive(event cloudevents.Event) {
 	// don't block the caller.
 	go p.parse(event)
 }
 
-func (p *Slash) parse(event cloudevents.Event) {
-
+func (p *PrefixParser) parse(event cloudevents.Event) {
 	switch event.Type() {
 	case "botless.slack.message":
 		p.parseSlackMessage(event)
@@ -31,7 +29,7 @@ func (p *Slash) parse(event cloudevents.Event) {
 	}
 }
 
-func (p *Slash) parseSlackMessage(event cloudevents.Event) {
+func (p *PrefixParser) parseSlackMessage(event cloudevents.Event) {
 
 	msg := &slack.MessageEvent{}
 	if err := event.DataAs(msg); err != nil {
@@ -41,7 +39,7 @@ func (p *Slash) parseSlackMessage(event cloudevents.Event) {
 
 	txt := msg.Msg.Text
 
-	cmd := parseCommand(txt)
+	cmd := ParseCommand(txt, p.Prefix)
 	if cmd != nil {
 
 		ec := event.Context.AsV02()
@@ -53,7 +51,7 @@ func (p *Slash) parseSlackMessage(event cloudevents.Event) {
 
 		cmdEvent := cloudevents.Event{
 			Context: cloudevents.EventContextV02{
-				Type:       events.Bot.Type("command"),
+				Type:       events.Bot.Type("command", cmd.Cmd),
 				Source:     ec.Source,
 				Time:       ec.Time,
 				Extensions: ec.Extensions, // pass all extensions along.
@@ -66,24 +64,4 @@ func (p *Slash) parseSlackMessage(event cloudevents.Event) {
 			log.Printf("sent: %s command: %+v", cmdEvent.Type(), cmd)
 		}
 	}
-}
-
-func parseCommand(txt string) *events.Command {
-	txt = strings.TrimSpace(txt)
-	if !strings.HasPrefix(txt, "/") {
-		return nil
-	}
-	cmd := &events.Command{}
-
-	txt = strings.TrimPrefix(txt, "/")
-
-	cmdEndIndex := strings.Index(txt, " ")
-	if cmdEndIndex == -1 {
-		// the command has no arguments.
-		cmd.Cmd = txt
-	} else {
-		cmd.Cmd = txt[:cmdEndIndex]
-		cmd.Args = txt[cmdEndIndex+1:]
-	}
-	return cmd
 }

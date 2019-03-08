@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/botless/parser/pkg/slash"
+	"github.com/botless/parser/pkg/parser"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
 	clienthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
@@ -17,6 +17,9 @@ type envConfig struct {
 
 	// Target is the endpoint to receive cloudevents.
 	Target string `envconfig:"TARGET" required:"true"`
+
+	// Prefix parses commands starting with prefix and creates events.
+	Prefix string `envconfig:"PREFIX" default:"/"`
 }
 
 func main() {
@@ -41,15 +44,18 @@ func _main(args []string) int {
 		log.Fatalf("Failed to create client: %s", err.Error())
 	}
 
-	p := &slash.Slash{Ce: c}
+	p := &parser.PrefixParser{
+		Ce:     c,
+		Prefix: env.Prefix,
+	}
 
 	ctx := context.Background()
 	if err := c.StartReceiver(ctx, p.Receive); err != nil {
 		log.Fatalf("Failed to start reveiver client: %s", err.Error())
 	}
-	log.Printf("slash parser listening on :%d", env.Port)
+	log.Printf("prefix parser listening on :%d", env.Port)
 	<-ctx.Done()
-	log.Printf("slash parser done")
+	log.Printf("prefix parser done")
 
 	return 0
 }

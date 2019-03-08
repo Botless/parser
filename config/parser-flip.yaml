@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1alpha1
 kind: Service
 metadata:
-  name: slash-command-parser
+  name: flip-command-parser
   labels:
     knative.dev/type: "function"
 spec:
@@ -10,15 +10,18 @@ spec:
       revisionTemplate:
         spec:
           container:
-            image: github.com/botless/parser/cmd/slash/
+            image: github.com/botless/parser/cmd/prefix/
             env:
             - name: TARGET
               value: "http://parser-out-channel-kx7fg.default.svc.cluster.local/" # <---------------   TODO: update this.
+            - name: PREFIX
+              value: "(╯°□°)╯︵ "
+
 ---
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Subscription
 metadata:
-  name: slash-command-parser
+  name: flip-command-parser
 spec:
   channel:
     apiVersion: eventing.knative.dev/v1alpha1
@@ -28,15 +31,4 @@ spec:
     ref:
       apiVersion: serving.knative.dev/v1alpha1
       kind: Service
-      name: slash-command-parser
----
-# Events will be sent to out of the parser on parser-out
-apiVersion: eventing.knative.dev/v1alpha1
-kind: Channel
-metadata:
-  name: parser-out
-spec:
-  provisioner:
-    apiVersion: eventing.knative.dev/v1alpha1
-    kind: ClusterChannelProvisioner
-    name: in-memory-channel
+      name: flip-command-parser

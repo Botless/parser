@@ -1,0 +1,34 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: slash-command-parser
+  labels:
+    knative.dev/type: "function"
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        spec:
+          container:
+            image: github.com/botless/parser/cmd/prefix/
+            env:
+            - name: TARGET
+              value: "http://parser-out-channel-kx7fg.default.svc.cluster.local/" # <---------------   TODO: update this.
+            - name: PREFIX
+              value: "/"
+
+---
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Subscription
+metadata:
+  name: slash-command-parser
+spec:
+  channel:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: slack-in
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1alpha1
+      kind: Service
+      name: slash-command-parser

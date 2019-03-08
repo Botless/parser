@@ -1,0 +1,10 @@
+# Events will be sent to out of the parser on parser-out
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Channel
+metadata:
+  name: parser-out
+spec:
+  provisioner:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: ClusterChannelProvisioner
+    name: in-memory-channel
