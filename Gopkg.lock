@@ -3,11 +3,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6d9b321507660027e14d1780f77846124e7e82a2b33795250b231b27d7c96cc6"
+  digest = "1:9469c067fb1a7a7dd87417f22a30e26aa5af683f582f8487b42ffcb70576d55d"
   name = "github.com/botless/events"
   packages = ["pkg/events"]
   pruneopts = "UT"
-  revision = "230912b44a3d5e6f4a15aab41e39a10238845baf"
+  revision = "8f09b9c5c88240259e236e63e717660c9ecafaa9"
 
 [[projects]]
   digest = "1:3f4e0df26a31e7b21aa85f4657725a6e749f42d455c94049d1bb42b614f8816f"
