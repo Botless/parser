@@ -13,20 +13,19 @@ spec:
             image: github.com/botless/parser/cmd/prefix/
             env:
             - name: TARGET
-              value: "http://parser-out-channel-kx7fg.default.svc.cluster.local/" # <---------------   TODO: update this.
+              value: "http://default-broker.default.svc.cluster.local/"
             - name: PREFIX
               value: "/"
 
 ---
 apiVersion: eventing.knative.dev/v1alpha1
-kind: Subscription
+kind: Trigger
 metadata:
   name: slash-command-parser
 spec:
-  channel:
-    apiVersion: eventing.knative.dev/v1alpha1
-    kind: Channel
-    name: slack-in
+  filter:
+    sourceAndType:
+      type: botless.slack.message
   subscriber:
     ref:
       apiVersion: serving.knative.dev/v1alpha1
