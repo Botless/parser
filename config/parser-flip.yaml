@@ -4,6 +4,10 @@ metadata:
   name: flip-command-parser
   labels:
     knative.dev/type: "function"
+    eventing.knative.dev/autotrigger: "true"
+  annotations:
+    trigger.eventing.knative.dev/filter: |
+      [{"type":"botless.slack.message"}]
 spec:
   runLatest:
     configuration:
@@ -16,18 +20,3 @@ spec:
               value: "http://default-broker.default.svc.cluster.local/"
             - name: PREFIX
               value: "(╯°□°)╯︵ "
-
----
-apiVersion: eventing.knative.dev/v1alpha1
-kind: Trigger
-metadata:
-  name: flip-command-parser
-spec:
-  filter:
-    sourceAndType:
-      type: botless.slack.message
-  subscriber:
-    ref:
-      apiVersion: serving.knative.dev/v1alpha1
-      kind: Service
-      name: flip-command-parser
