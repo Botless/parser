@@ -16,7 +16,5 @@ spec:
           container:
             image: github.com/botless/parser/cmd/prefix/
             env:
-            - name: TARGET
-              value: "http://default-broker.default.svc.cluster.local/"
             - name: PREFIX
               value: "/"

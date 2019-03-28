@@ -15,9 +15,6 @@ type envConfig struct {
 	// Port is server port to be listened.
 	Port int `envconfig:"USER_PORT" default:"8080"`
 
-	// Target is the endpoint to receive cloudevents.
-	Target string `envconfig:"TARGET" required:"true"`
-
 	// Prefix parses commands starting with prefix and creates events.
 	Prefix string `envconfig:"PREFIX" default:"/"`
 }
@@ -34,7 +31,6 @@ func _main(args []string) int {
 	}
 
 	c, err := clienthttp.New(
-		http.WithTarget(env.Target),
 		http.WithPort(env.Port),
 		http.WithBinaryEncoding(),
 		client.WithTimeNow(),

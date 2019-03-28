@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"context"
+	"fmt"
 	"github.com/botless/events/pkg/events"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -14,42 +14,37 @@ type PrefixParser struct {
 	Prefix string
 }
 
-func (p *PrefixParser) Receive(event cloudevents.Event) {
-	// don't block the caller.
-	go p.parse(event)
-}
-
-func (p *PrefixParser) parse(event cloudevents.Event) {
+func (p *PrefixParser) Receive(event cloudevents.Event, resp *cloudevents.EventResponse) {
 	switch event.Type() {
 	case "botless.slack.message":
-		p.parseSlackMessage(event)
+		if cmd, err := p.parseSlackMessage(event); err != nil {
+			log.Printf("failed to parse message: %s", err)
+		} else if cmd != nil {
+			resp.RespondWith(200, cmd)
+		}
+
 	default:
 		// ignore
 		log.Printf("botless parser ignored event type %q", event.Type())
 	}
 }
 
-func (p *PrefixParser) parseSlackMessage(event cloudevents.Event) {
-
+func (p *PrefixParser) parseSlackMessage(event cloudevents.Event) (*cloudevents.Event, error) {
 	msg := &slack.MessageEvent{}
 	if err := event.DataAs(msg); err != nil {
-		log.Printf("failed to get slack message event from cloudevent of type %s", event.Type())
-		return
+		return nil, fmt.Errorf("failed to get slack message event from cloudevent of type %s", event.Type())
 	}
 
 	txt := msg.Msg.Text
 
 	cmd := ParseCommand(txt, p.Prefix)
 	if cmd != nil {
-
 		ec := event.Context.AsV02()
-
-		log.Printf("got: %+v", msg)
 
 		cmd.Author = msg.Msg.Name
 		cmd.Channel = msg.Channel
 
-		cmdEvent := cloudevents.Event{
+		return &cloudevents.Event{
 			Context: cloudevents.EventContextV02{
 				Type:       events.Bot.Type("command", cmd.Cmd),
 				Source:     ec.Source,
@@ -57,11 +52,7 @@ func (p *PrefixParser) parseSlackMessage(event cloudevents.Event) {
 				Extensions: ec.Extensions, // pass all extensions along.
 			}.AsV02(),
 			Data: cmd,
-		}
-		if _, err := p.Ce.Send(context.TODO(), cmdEvent); err != nil {
-			log.Printf("failed to send botless command %s", err.Error())
-		} else {
-			log.Printf("sent: %s command: %+v", cmdEvent.Type(), cmd)
-		}
+		}, nil
 	}
+	return nil, nil
 }
