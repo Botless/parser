@@ -4,11 +4,8 @@ import (
 	"context"
 	"github.com/botless/parser/pkg/parser"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
-	clienthttp "github.com/cloudevents/sdk-go/pkg/cloudevents/client/http"
-	"github.com/cloudevents/sdk-go/pkg/cloudevents/transport/http"
 	"github.com/kelseyhightower/envconfig"
 	"log"
-	"os"
 )
 
 type envConfig struct {
@@ -20,22 +17,12 @@ type envConfig struct {
 }
 
 func main() {
-	os.Exit(_main(os.Args[1:]))
-}
-
-func _main(args []string) int {
 	var env envConfig
 	if err := envconfig.Process("", &env); err != nil {
-		log.Printf("[ERROR] Failed to process env var: %s", err)
-		return 1
+		log.Fatalf("[ERROR] Failed to process env var: %s", err)
 	}
 
-	c, err := clienthttp.New(
-		http.WithPort(env.Port),
-		http.WithBinaryEncoding(),
-		client.WithTimeNow(),
-		client.WithUUIDs(),
-	)
+	c, err := client.NewDefault()
 	if err != nil {
 		log.Fatalf("Failed to create client: %s", err.Error())
 	}
@@ -46,12 +33,5 @@ func _main(args []string) int {
 	}
 
 	ctx := context.Background()
-	if err := c.StartReceiver(ctx, p.Receive); err != nil {
-		log.Fatalf("Failed to start reveiver client: %s", err.Error())
-	}
-	log.Printf("prefix parser listening on :%d", env.Port)
-	<-ctx.Done()
-	log.Printf("prefix parser done")
-
-	return 0
+	log.Fatal(c.StartReceiver(ctx, p.Receive))
 }
