@@ -17,10 +17,11 @@ type PrefixParser struct {
 func (p *PrefixParser) Receive(event cloudevents.Event, resp *cloudevents.EventResponse) {
 	switch event.Type() {
 	case "botless.slack.message":
-		if cmd, err := p.parseSlackMessage(event); err != nil {
+		if re, err := p.parseSlackMessage(event); err != nil {
 			log.Printf("failed to parse message: %s", err)
-		} else if cmd != nil {
-			resp.RespondWith(200, cmd)
+		} else if re != nil {
+			log.Printf("responding with \n%s", re)
+			resp.RespondWith(200, re)
 		}
 
 	default:
